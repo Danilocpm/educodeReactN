@@ -21,12 +21,20 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": true
+      "edgeToEdgeEnabled": true,
+      "package": "com.shiruu.educode"
     },
     "web": {
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
+            [
+        "@react-native-google-signin/google-signin",
+        {
+          "androidClientId": "16934476424-r7inl0g2omerhrthv19eso4a5b3p8fg0.apps.googleusercontent.com",
+          "iosUrlScheme": "com.googleusercontent.apps.16934476424-r7inl0g2omerhrthv19eso4a5b3p8fg0"
+        }
+      ],
       "expo-router"
     ],
     "extra": {

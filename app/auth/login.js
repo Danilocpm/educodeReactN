@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Button, StyleSheet, Alert } from 'react-native';
-import { supabase } from '../lib/supabase';
+import { supabase } from '../../lib/supabase';
 import { GoogleSignin, statusCodes } from '@react-native-google-signin/google-signin';
 
 GoogleSignin.configure({

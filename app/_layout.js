@@ -7,21 +7,23 @@ export default function RootLayout() {
   const router = useRouter();
 
   useEffect(() => {
-    // Pega a sessão atual
+    // Verifica a sessão atual
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       if (!session) {
-        router.replace("/login");
+        router.replace("/auth/login");
+      } else {
+        router.replace("/(tabs)");
       }
     });
 
-    // Ouve mudanças de auth
+    // Escuta mudanças de autenticação
     const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
       if (session) {
-        router.replace("/"); // Vai para home
+        router.replace("/(tabs)");
       } else {
-        router.replace("/login");
+        router.replace("/auth/login");
       }
     });
 

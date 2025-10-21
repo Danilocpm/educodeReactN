@@ -5,10 +5,10 @@ import { Feather, MaterialCommunityIcons } from '@expo/vector-icons'
 const ContinueCard = ({ title }) => (
   <View style={styles.continueCardContainer}>
     <View style={styles.continueLeft}>
-      <Feather name="cloud" size={24} color="#007aff" />
+      <Feather name="cloud" size={40} color="#007aff" />
       <View style={styles.continueTextContainer}>
-        <Text style={styles.continueTitle}>Deseja continuar fazendo?</Text>
         <Text style={styles.continueSubtitle}>{title}</Text>
+        <Text style={styles.continueTitle}>Deseja continuar fazendo?</Text>        
       </View>
     </View>
     <TouchableOpacity style={styles.blueCircleButton}>
@@ -21,8 +21,8 @@ const styles = StyleSheet.create({
   continueCardContainer: {
     backgroundColor: '#1c1f3a',
     borderRadius: 20,
-    padding: 40,
-    marginHorizontal: 20,
+    padding: 36,
+    marginHorizontal: 10,
     marginTop: 30,
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -36,10 +36,12 @@ const styles = StyleSheet.create({
   continueTextContainer: {
     marginLeft: 15,
     flex: 1,
+
   },
   continueTitle: {
     color: '#aaa',
     fontSize: 14,
+    marginTop: 2
   },
   continueSubtitle: {
     color: '#fff',
@@ -53,7 +55,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#007aff',
     justifyContent: 'center',
     alignItems: 'center',
-    marginLeft: 16,
+    marginLeft: 20,
   },
 });
 

@@ -1,10 +1,10 @@
 import React from 'react';
 import { TouchableOpacity, Text, StyleSheet } from 'react-native';
-import Icon from 'react-native-vector-icons/Feather';
+import { Feather } from '@expo/vector-icons'
 
 const PracticeCard = ({ item }) => (
   <TouchableOpacity style={styles.practiceCardContainer}>
-    <Icon name={item.icon} size={40} color="#007aff" />
+    <Feather name={item.icon} size={40} color="#007aff" />
     <Text style={styles.practiceCardTitle}>{item.title}</Text>
   </TouchableOpacity>
 );

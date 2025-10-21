@@ -6,7 +6,7 @@ import {
   TouchableOpacity,
   Dimensions,
 } from 'react-native';
-import Icon from 'react-native-vector-icons/Feather';
+import { Feather } from '@expo/vector-icons';
 
 const { width } = Dimensions.get('window');
 
@@ -17,7 +17,7 @@ const ChallengeCard = ({ item }) => (
       <Text style={styles.cardSubtitle}>{item.subtitle}</Text>
     </View>
     <TouchableOpacity style={styles.blueCircleButton}>
-      <Icon name="chevron-right" size={28} color="#fff" />
+      <Feather name="chevron-right" size={28} color="#fff" />
     </TouchableOpacity>
   </View>
 );

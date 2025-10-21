@@ -1,18 +1,18 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import Icon from 'react-native-vector-icons/Feather';
+import { Feather } from '@expo/vector-icons'
 
 const ContinueCard = ({ title }) => (
   <View style={styles.continueCardContainer}>
     <View style={styles.continueLeft}>
-      <Icon name="cloud" size={24} color="#007aff" />
+      <Feather name="cloud" size={24} color="#007aff" />
       <View style={styles.continueTextContainer}>
         <Text style={styles.continueTitle}>Deseja continuar fazendo?</Text>
         <Text style={styles.continueSubtitle}>{title}</Text>
       </View>
     </View>
     <TouchableOpacity style={styles.blueCircleButton}>
-      <Icon name="chevron-right" size={28} color="#fff" />
+      <Feather name="chevron-right" size={28} color="#fff" />
     </TouchableOpacity>
   </View>
 );

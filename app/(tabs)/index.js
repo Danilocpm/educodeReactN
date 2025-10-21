@@ -10,7 +10,7 @@ import {
   TouchableOpacity, 
 } from 'react-native';
 
-import Icon from 'react-native-vector-icons/Feather';
+import { Feather } from '@expo/vector-icons'
 
 
 import ChallengeCard from '../../src/components/cards/ChallengeCard';
@@ -64,7 +64,7 @@ const App = () => {
             <Text style={styles.userNameText}>Seu Nome Aqui</Text>
           </View>
           <TouchableOpacity style={styles.profileIcon}>
-            <Icon name="user" size={24} color="#fff" />
+            <Feather name="user" size={24} color="#fff" />
           </TouchableOpacity>
         </View>
         {/* --- Fim do Header --- */}

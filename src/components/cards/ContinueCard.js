@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { Feather } from '@expo/vector-icons'
+import { Feather, MaterialCommunityIcons } from '@expo/vector-icons'
 
 const ContinueCard = ({ title }) => (
   <View style={styles.continueCardContainer}>
@@ -12,7 +12,7 @@ const ContinueCard = ({ title }) => (
       </View>
     </View>
     <TouchableOpacity style={styles.blueCircleButton}>
-      <Feather name="chevron-right" size={28} color="#fff" />
+      <MaterialCommunityIcons name="chevron-double-right" size={28} color="#fff" />
     </TouchableOpacity>
   </View>
 );

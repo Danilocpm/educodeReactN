@@ -2,6 +2,7 @@ import { Stack, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import { supabase } from "../lib/supabase";
 
+
 export default function RootLayout() {
   const [session, setSession] = useState(null);
   const router = useRouter();

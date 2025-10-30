@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 
 import { Feather } from '@expo/vector-icons'
+import { useThemeStore } from '../../src/store/useThemeStore';
 
 
 import ChallengeCard from '../../src/components/cards/ChallengeCard';
@@ -51,6 +52,9 @@ const practiceData = [
 // --- Tela Principal ---
 
 const App = () => {
+  const { theme } = useThemeStore();
+  const styles = React.useMemo(() => getStyles(theme), [theme]);
+  
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" />
@@ -101,10 +105,10 @@ const App = () => {
 };
 
 // --- Estilos ---
-const styles = StyleSheet.create({
+const getStyles = (theme) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: 'rgba(10, 15, 33, 1)',
+    backgroundColor: theme.background, // <--- Exemplo de uso do tema
   },
   contentContainer: {
     paddingVertical: 20,
@@ -119,19 +123,19 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     marginTop: 10,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.1)',
-    shadowColor: '#000',
+    borderBottomColor: theme.borderColor, // Usa o tema
+    shadowColor: theme.shadowColor, // Usa o tema
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
     shadowRadius: 3,
     elevation: 2,
   },
   welcomeText: {
-    color: '#aaa',
+    color: theme.textSecondary, // Usa o tema
     fontSize: 16,
   },
   userNameText: {
-    color: '#fff',
+    color: theme.textPrimary, // Usa o tema
     fontSize: 22,
     fontWeight: 'bold',
     marginBottom: 10
@@ -140,7 +144,7 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: '#1c1f3a',
+    backgroundColor: theme.cardBackground, // Usa o tema
     justifyContent: 'center',
     alignItems: 'center',
     marginTop: 10,
@@ -153,7 +157,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   sectionTitle: {
-    color: '#fff',
+    color: theme.textPrimary, // Usa o tema
     fontSize: 20,
     fontWeight: 'bold',
     paddingHorizontal: 20,

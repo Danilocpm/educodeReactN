@@ -48,13 +48,7 @@ const ChallengesScreen = ({ navigation }) => {
       <View style={styles.container}>
         {/* 1. Header */}
         <View style={styles.header}>
-          <TouchableOpacity onPress={() => navigation.goBack()}>
-            <Feather name="chevron-left" size={30} color={theme.iconColor} />
-          </TouchableOpacity>
           <Text style={styles.headerTitle}>Exercícios</Text>
-          <TouchableOpacity style={styles.profileIconContainer}>
-            <Feather name="user" size={22} color={theme.iconColor} />
-          </TouchableOpacity>
         </View>
 
         {/* 2. Seletor de Dificuldade */}

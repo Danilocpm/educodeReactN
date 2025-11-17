@@ -1,22 +1,16 @@
 import { Stack, useRouter } from "expo-router";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { supabase } from "../lib/supabase";
-
+import { useAuthStore } from "../src/store/useAuthStore";
+import LoadingScreen from "../src/components/LoadingScreen";
 
 export default function RootLayout() {
-  const [session, setSession] = useState(null);
+  const { loading, session, setSession, initializeAuth } = useAuthStore();
   const router = useRouter();
 
   useEffect(() => {
-    // Verifica a sessão atual
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      if (!session) {
-        router.replace("/auth/login");
-      } else {
-        router.replace("/(tabs)");
-      }
-    });
+    // Inicializa a autenticação
+    initializeAuth();
 
     // Escuta mudanças de autenticação
     const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
@@ -32,6 +26,22 @@ export default function RootLayout() {
       listener.subscription.unsubscribe();
     };
   }, []);
+
+  // Redireciona após carregar a sessão
+  useEffect(() => {
+    if (!loading) {
+      if (session) {
+        router.replace("/(tabs)");
+      } else {
+        router.replace("/auth/login");
+      }
+    }
+  }, [loading, session]);
+
+  // Exibe loading screen enquanto verifica a autenticação
+  if (loading) {
+    return <LoadingScreen />;
+  }
 
   return <Stack screenOptions={{ headerShown: false }} />;
 }

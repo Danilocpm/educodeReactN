@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Button, StyleSheet, Alert } from 'react-native';
 import { supabase } from '../../lib/supabase';
 import { GoogleSignin, statusCodes } from '@react-native-google-signin/google-signin';
+import { useAuthStore } from '../../src/store/useAuthStore';
 
 GoogleSignin.configure({
   webClientId: '16934476424-plrvdcsrhofs2ceifubo64pgqkvqtn36.apps.googleusercontent.com',
@@ -9,22 +10,26 @@ GoogleSignin.configure({
 });
 
 export default function Login() {
+  const { setSession } = useAuthStore();
+
   const handleLoginWithGoogle = async () => {
     try {
       await GoogleSignin.hasPlayServices();
       const userInfo = await GoogleSignin.signIn();
       
-      // CORREÇÃO: Acessamos o idToken dentro de userInfo.data
+      
       if (userInfo && userInfo.data && userInfo.data.idToken) {
         const { data, error: supabaseError } = await supabase.auth.signInWithIdToken({
           provider: 'google',
-          // CORREÇÃO: Passamos o token do caminho correto
           token: userInfo.data.idToken,
         });
 
         if (supabaseError) {
           throw supabaseError;
         }
+        
+        // Atualiza a store com a nova sessão
+        setSession(data.session);
         
         console.log('LOGIN BEM-SUCEDIDO!', data.user);
         Alert.alert('Sucesso!', 'Você está logado!');

@@ -5,8 +5,10 @@ import {
   TouchableOpacity,
   StyleSheet,
   ScrollView,
+  Alert,
 } from "react-native";
 import { useThemeStore } from "../../src/store/useThemeStore";
+import { useAuthStore } from "../../src/store/useAuthStore";
 
 // Componente auxiliar para os botões de opção
 const OptionButton = ({ label, onPress, isActive, styles }) => (
@@ -32,9 +34,32 @@ export default function SettingsScreen() {
     setFontSize,
   } = useThemeStore();
 
-  const handleLogout = () => {
-    console.log("Usuário clicou em Sair");
-    // Coloque sua lógica de logout aqui
+  const { signOut } = useAuthStore();
+
+  const handleLogout = async () => {
+    Alert.alert(
+      "Confirmar Logout",
+      "Tem certeza que deseja sair?",
+      [
+        {
+          text: "Cancelar",
+          style: "cancel"
+        },
+        {
+          text: "Sair",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await signOut();
+              console.log("Logout realizado com sucesso");
+            } catch (error) {
+              console.error("Erro ao fazer logout:", error);
+              Alert.alert("Erro", "Não foi possível fazer logout. Tente novamente.");
+            }
+          }
+        }
+      ]
+    );
   };
 
   // Os estilos agora usam as chaves do seu theme.js

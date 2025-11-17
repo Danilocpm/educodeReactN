@@ -52,12 +52,17 @@ const practiceData = [
 // --- Tela Principal ---
 
 const App = () => {
-  const { theme } = useThemeStore();
+  const { theme, isDark } = useThemeStore();
   const styles = React.useMemo(() => getStyles(theme), [theme]);
   
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="light-content" />
+      <StatusBar 
+        barStyle={isDark ? 'light-content' : 'dark-content'}
+        backgroundColor={theme.background}
+        translucent={false}
+        hidden={true}
+      />
       
       <ScrollView contentContainerStyle={styles.contentContainer}>
         
@@ -123,12 +128,12 @@ const getStyles = (theme) => StyleSheet.create({
     marginBottom: 20,
     marginTop: 10,
     borderBottomWidth: 1,
-    borderBottomColor: theme.borderColor, // Usa o tema
-    shadowColor: theme.shadowColor, // Usa o tema
+    borderBottomColor: theme.borderColor,
+    shadowColor: theme.shadowColor,
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
+    shadowOpacity: theme.shadowOpacity,
     shadowRadius: 3,
-    elevation: 2,
+    elevation: theme.elevation,
   },
   welcomeText: {
     color: theme.textSecondary, // Usa o tema

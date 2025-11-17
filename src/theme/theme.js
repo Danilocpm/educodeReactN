@@ -25,7 +25,11 @@ export const lightTheme = {
   // Borda para divisores e contêineres
   borderColor: 'rgba(0, 0, 0, 0.1)', 
   // Cor da sombra (geralmente preto, a opacidade é controlada no estilo)
-  shadowColor: '#000000', 
+  shadowColor: '#000000',
+  // Opacidade da sombra (0 = sem sombra)
+  shadowOpacity: 0.3,
+  // Elevação (Android) (0 = sem elevação)
+  elevation: 0,
   
   // --- Barra de Status ---
   // Define o estilo dos ícones da barra de status (ex: bateria, relógio)
@@ -59,7 +63,11 @@ export const darkTheme = {
   // Borda para divisores (branco com transparência)
   borderColor: 'rgba(255, 255, 255, 0.1)', 
   // Cor da sombra
-  shadowColor: '#000000', 
+  shadowColor: '#000000',
+  // Opacidade da sombra
+  shadowOpacity: 0.3,
+  // Elevação (Android)
+  elevation: 5,
   
   // --- Barra de Status ---
   // Define o estilo dos ícones da barra de status

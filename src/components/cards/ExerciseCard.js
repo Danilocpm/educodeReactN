@@ -1,16 +1,22 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Feather } from '@expo/vector-icons'; 
+import { useRouter } from 'expo-router';
 import { useThemeStore } from '../../store/useThemeStore'
 
-// Recebe props para o título e a porcentagem
-const ExerciseCard = ({ title, percentage }) => {
+// Recebe props para o título, a porcentagem e o ID do exercício
+const ExerciseCard = ({ id, title, percentage }) => {
+  const router = useRouter();
   // Puxa o tema e o tamanho da fonte do Zustand
   const { theme, fontSize } = useThemeStore();
   const styles = getStyles(theme, fontSize);
 
+  const handlePress = () => {
+    router.push(`/problems/${id}`);
+  };
+
   return (
-    <TouchableOpacity style={styles.container}>
+    <TouchableOpacity style={styles.container} onPress={handlePress}>
       <View style={styles.textContainer}>
         <Text style={styles.title}>{title}</Text>
         <Text style={styles.percentage}>

@@ -68,6 +68,7 @@ const ChallengesScreen = ({ navigation }) => {
           {exercisesToShow.map((exercise) => (
             <ExerciseCard
               key={exercise.id}
+              id={exercise.id}
               title={exercise.title}
               percentage="00" // Você passaria o valor real aqui
             />

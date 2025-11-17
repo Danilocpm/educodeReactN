@@ -15,6 +15,12 @@ export const lightTheme = {
   // Cor dos ícones, alinhada com o texto primário
   iconColor: 'rgba(10, 15, 33, 1)', 
   
+  // --- Cores de Destaque ---
+  // Cor primária do aplicativo (botões, ícones de ação)
+  primary: '#007aff',
+  // Cor de texto sobre elementos com cor primária
+  primaryText: '#ffffff',
+  
   // --- Bordas e Sombras ---
   // Borda para divisores e contêineres
   borderColor: 'rgba(0, 0, 0, 0.1)', 
@@ -42,6 +48,12 @@ export const darkTheme = {
   // --- Ícones ---
   // Cor dos ícones (ex: ícone de usuário)
   iconColor: '#ffffff', 
+  
+  // --- Cores de Destaque ---
+  // Cor primária do aplicativo (botões, ícones de ação)
+  primary: '#007aff',
+  // Cor de texto sobre elementos com cor primária
+  primaryText: '#ffffff',
   
   // --- Bordas e Sombras ---
   // Borda para divisores (branco com transparência)

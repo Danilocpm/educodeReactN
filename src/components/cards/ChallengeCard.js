@@ -7,24 +7,30 @@ import {
   Dimensions,
 } from 'react-native';
 import { Feather, MaterialCommunityIcons } from '@expo/vector-icons';
+import { useThemeStore } from '../../store/useThemeStore';
 
 const { width } = Dimensions.get('window');
 
-const ChallengeCard = ({ item }) => (
-  <View style={styles.challengeCardContainer}>
-    <View style={styles.cardTextContainer}>
-      <Text style={styles.cardTitle}>{item.title}</Text>
-      <Text style={styles.cardSubtitle}>{item.subtitle}</Text>
-    </View>
-    <TouchableOpacity style={styles.blueCircleButton}>
-      <MaterialCommunityIcons name="chevron-double-right" size={28} color="#fff" />
-    </TouchableOpacity>
-  </View>
-);
+const ChallengeCard = ({ item }) => {
+  const { theme, fontSize } = useThemeStore();
+  const styles = getStyles(theme, fontSize);
 
-const styles = StyleSheet.create({
+  return (
+    <View style={styles.challengeCardContainer}>
+      <View style={styles.cardTextContainer}>
+        <Text style={styles.cardTitle}>{item.title}</Text>
+        <Text style={styles.cardSubtitle}>{item.subtitle}</Text>
+      </View>
+      <TouchableOpacity style={styles.blueCircleButton}>
+        <MaterialCommunityIcons name="chevron-double-right" size={28} color={theme.primaryText} />
+      </TouchableOpacity>
+    </View>
+  );
+};
+
+const getStyles = (theme, baseFontSize) => StyleSheet.create({
   challengeCardContainer: {
-    backgroundColor: '#1c1f3a',
+    backgroundColor: theme.cardBackground,
     borderRadius: 20,
     padding: 20,
     width: width * 0.85,
@@ -37,20 +43,20 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   cardTitle: {
-    color: '#fff',
-    fontSize: 18,
+    color: theme.textPrimary,
+    fontSize: baseFontSize + 2,
     fontWeight: 'bold',
   },
   cardSubtitle: {
-    color: '#aaa',
-    fontSize: 14,
+    color: theme.textSecondary,
+    fontSize: baseFontSize - 2,
     marginTop: 4,
   },
   blueCircleButton: {
     width: 50,
     height: 50,
     borderRadius: 25,
-    backgroundColor: '#007aff',
+    backgroundColor: theme.primary,
     justifyContent: 'center',
     alignItems: 'center',
     marginLeft: 16,

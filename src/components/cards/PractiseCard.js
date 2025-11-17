@@ -1,17 +1,23 @@
 import React from 'react';
 import { TouchableOpacity, Text, StyleSheet } from 'react-native';
-import { Feather } from '@expo/vector-icons'
+import { Feather } from '@expo/vector-icons';
+import { useThemeStore } from '../../store/useThemeStore';
 
-const PracticeCard = ({ item }) => (
-  <TouchableOpacity style={styles.practiceCardContainer}>
-    <Feather name={item.icon} size={40} color="#007aff" />
-    <Text style={styles.practiceCardTitle}>{item.title}</Text>
-  </TouchableOpacity>
-);
+const PracticeCard = ({ item }) => {
+  const { theme, fontSize } = useThemeStore();
+  const styles = getStyles(theme, fontSize);
 
-const styles = StyleSheet.create({
+  return (
+    <TouchableOpacity style={styles.practiceCardContainer}>
+      <Feather name={item.icon} size={40} color={theme.primary} />
+      <Text style={styles.practiceCardTitle}>{item.title}</Text>
+    </TouchableOpacity>
+  );
+};
+
+const getStyles = (theme, baseFontSize) => StyleSheet.create({
   practiceCardContainer: {
-    backgroundColor: '#1c1f3a',
+    backgroundColor: theme.cardBackground,
     borderRadius: 20,
     padding: 20,
     width: 140,
@@ -21,8 +27,8 @@ const styles = StyleSheet.create({
     marginRight: 15,
   },
   practiceCardTitle: {
-    color: '#fff',
-    fontSize: 16,
+    color: theme.textPrimary,
+    fontSize: baseFontSize,
     fontWeight: 'bold',
     marginTop: 10,
   },

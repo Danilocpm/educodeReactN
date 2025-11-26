@@ -1,8 +1,21 @@
 import { Stack, useRouter } from "expo-router";
 import { useEffect } from "react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { supabase } from "../lib/supabase";
 import { useAuthStore } from "../src/store/useAuthStore";
 import LoadingScreen from "../src/components/LoadingScreen";
+
+// Criar uma instância do QueryClient com configurações otimizadas para React Native
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000, // 5 minutos
+      cacheTime: 10 * 60 * 1000, // 10 minutos
+      retry: 2,
+      refetchOnWindowFocus: false, // Desabilitar refetch automático no foco (importante para mobile)
+    },
+  },
+});
 
 export default function RootLayout() {
   const { loading, session, setSession, initializeAuth } = useAuthStore();
@@ -43,5 +56,9 @@ export default function RootLayout() {
     return <LoadingScreen />;
   }
 
-  return <Stack screenOptions={{ headerShown: false }} />;
+  return (
+    <QueryClientProvider client={queryClient}>
+      <Stack screenOptions={{ headerShown: false }} />
+    </QueryClientProvider>
+  );
 }

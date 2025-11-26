@@ -6,38 +6,36 @@ import {
   SafeAreaView,
   StatusBar,
   ScrollView,
-  TouchableOpacity,
+  ActivityIndicator,
 } from 'react-native';
-import { Feather } from '@expo/vector-icons';
 import { useThemeStore } from '../../src/store/useThemeStore'; 
 
 // Importa os componentes
 import DifficultySelector from '../../src/components/challenges/DifficultySelector';
 import ExerciseCard from '../../src/components/cards/ExerciseCard';
 
-// Dados de exemplo
-const MOCK_DATA = {
-  Fácil: [
-    { id: '1', title: 'Exercício Fácil 1' },
-    { id: '2', title: 'Exercício Fácil 2' },
-    { id: '3', title: 'Exercício Fácil 3' },
-  ],
-  Médio: [
-    { id: '4', title: 'Exercício Médio 1' },
-    { id: '5', title: 'Exercício Médio 2' },
-  ],
-  Difícil: [{ id: '6', title: 'Exercício Difícil 1' }],
+// Importa os hooks de dados
+import { useProblemsByDifficulty } from '../../src/services/useProblems';
+
+// Mapeamento entre o texto em português (UI) e o valor do banco (enum)
+const DIFFICULTY_MAP = {
+  'Fácil': 'easy',
+  'Médio': 'medium',
+  'Difícil': 'hard',
 };
 
 const ChallengesScreen = ({ navigation }) => {
   const { theme, fontSize } = useThemeStore();
   const styles = getStyles(theme, fontSize);
 
-  // Estado para controlar a dificuldade selecionada
+  // Estado para controlar a dificuldade selecionada (UI em português)
   const [selectedDifficulty, setSelectedDifficulty] = useState('Fácil');
 
-  // Filtra os exercícios para exibir (no seu app, isso viria de uma API/banco)
-  const exercisesToShow = MOCK_DATA[selectedDifficulty] || [];
+  // Converte a dificuldade em português para o valor do banco
+  const difficultyValue = DIFFICULTY_MAP[selectedDifficulty];
+
+  // Busca os problemas do banco usando TanStack Query
+  const { data: problems = [], isLoading, error } = useProblemsByDifficulty(difficultyValue);
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -64,30 +62,38 @@ const ChallengesScreen = ({ navigation }) => {
         >
           <Text style={styles.difficultyTitle}>{selectedDifficulty}</Text>
 
-          {/* Mapeia os dados de exemplo para os cards */}
-          {exercisesToShow.map((exercise) => (
+          {/* Estado de carregamento */}
+          {isLoading && (
+            <View style={styles.centerContainer}>
+              <ActivityIndicator size="large" color={theme.primary} />
+              <Text style={styles.loadingText}>Carregando exercícios...</Text>
+            </View>
+          )}
+
+          {/* Estado de erro */}
+          {error && (
+            <View style={styles.centerContainer}>
+              <Text style={styles.errorText}>
+                Erro ao carregar exercícios: {error.message}
+              </Text>
+            </View>
+          )}
+
+          {/* Lista de exercícios do banco de dados */}
+          {!isLoading && !error && problems.map((problem) => (
             <ExerciseCard
-              key={exercise.id}
-              id={exercise.id}
-              title={exercise.title}
-              percentage="00" // Você passaria o valor real aqui
+              key={problem.id}
+              id={problem.id}
+              title={problem.title}
+              percentage="00" // Taxa de acerto será implementada futuramente
             />
           ))}
 
           {/* Fallback caso não haja exercícios */}
-          {exercisesToShow.length === 0 && (
+          {!isLoading && !error && problems.length === 0 && (
             <Text style={styles.emptyText}>
               Nenhum exercício encontrado para esta dificuldade.
             </Text>
-          )}
-
-          {/* Adicionando placeholders como na imagem (pode remover) */}
-          {selectedDifficulty === 'Fácil' && exercisesToShow.length < 6 && (
-            <>
-              <ExerciseCard title="Título do exercício" percentage="00" />
-              <ExerciseCard title="Título do exercício" percentage="00" />
-              <ExerciseCard title="Título do exercício" percentage="00" />
-            </>
           )}
         </ScrollView>
       </View>
@@ -143,6 +149,22 @@ const getStyles = (theme, fontSize) =>
       textAlign: 'center',
       marginTop: 40,
       fontSize: fontSize,
+    },
+    centerContainer: {
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingVertical: 40,
+    },
+    loadingText: {
+      color: theme.textSecondary,
+      marginTop: 12,
+      fontSize: fontSize,
+    },
+    errorText: {
+      color: '#ef4444', // Cor vermelha para erro
+      textAlign: 'center',
+      fontSize: fontSize,
+      paddingHorizontal: 20,
     },
   });
 

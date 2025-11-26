@@ -85,7 +85,7 @@ const CodeEditorScreen = () => {
           // Focar no editor ao carregar para abrir o teclado
           setTimeout(() => {
             editor.focus();
-          }, 500);
+          }, 100);
 
           // Adicionar evento de clique para garantir que o teclado abra
           document.getElementById('container').addEventListener('click', () => {

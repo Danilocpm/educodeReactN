@@ -5,7 +5,7 @@ import { GoogleSignin, statusCodes } from '@react-native-google-signin/google-si
 import { useAuthStore } from '../../src/store/useAuthStore';
 
 GoogleSignin.configure({
-  webClientId: '16934476424-plrvdcsrhofs2ceifubo64pgqkvqtn36.apps.googleusercontent.com',
+  webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
   scopes: ['profile', 'email'],
 });
 

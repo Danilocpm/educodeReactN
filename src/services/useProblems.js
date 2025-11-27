@@ -76,3 +76,37 @@ export const useProblemsByDifficulty = (difficulty, options = {}) => {
     ...options,
   });
 };
+
+/**
+ * Busca um problema específico pelo ID
+ * @param {string|number} id - ID do problema
+ * @returns {Object} Dados do problema completo
+ */
+const fetchProblemById = async (id) => {
+  const { data, error } = await supabase
+    .from('problems')
+    .select('id, title, slug, description_md, expected_output, difficulty')
+    .eq('id', id)
+    .single();
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return data;
+};
+
+/**
+ * Hook para buscar um problema específico pelo ID
+ * @param {string|number} id - ID do problema
+ * @param {Object} options - Opções do useQuery
+ * @returns {Object} Query result com data, isLoading, error, etc.
+ */
+export const useProblemById = (id, options = {}) => {
+  return useQuery({
+    queryKey: ['problem', id],
+    queryFn: () => fetchProblemById(id),
+    enabled: !!id, // Só executa se o ID estiver definido
+    ...options,
+  });
+};

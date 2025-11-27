@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -7,58 +7,20 @@ import {
   StatusBar,
   ScrollView,
   TouchableOpacity,
+  ActivityIndicator,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
+import Markdown from 'react-native-markdown-display';
 import { useThemeStore } from '../../src/store/useThemeStore';
+import { useProblemStore } from '../../src/store/useProblemStore';
+import { useProblemById } from '../../src/services/useProblems';
 
-// Dados mock - substitua com dados reais de uma API/banco
-const MOCK_PROBLEMS = {
-  '1': {
-    title: 'Exercício Fácil 1',
-    difficulty: 'Fácil',
-    statement: 'Escreva um programa que imprima "Hello World" na tela.',
-    solution: 'console.log("Hello World");',
-    comments: [
-      { id: '1', user: 'João Silva', text: 'Ótimo exercício para iniciantes!' },
-      { id: '2', user: 'Maria Santos', text: 'Muito didático!' },
-    ],
-  },
-  '2': {
-    title: 'Exercício Fácil 2',
-    difficulty: 'Fácil',
-    statement: 'Crie uma função que some dois números.',
-    solution: 'function soma(a, b) { return a + b; }',
-    comments: [{ id: '1', user: 'Pedro Costa', text: 'Bom para praticar funções.' }],
-  },
-  '3': {
-    title: 'Exercício Fácil 3',
-    difficulty: 'Fácil',
-    statement: 'Crie um array com 5 números e exiba-o no console.',
-    solution: 'const numeros = [1, 2, 3, 4, 5]; console.log(numeros);',
-    comments: [],
-  },
-  '4': {
-    title: 'Exercício Médio 1',
-    difficulty: 'Médio',
-    statement: 'Implemente uma função que inverta uma string.',
-    solution: 'function inverter(str) { return str.split("").reverse().join(""); }',
-    comments: [{ id: '1', user: 'Ana Lima', text: 'Desafio interessante!' }],
-  },
-  '5': {
-    title: 'Exercício Médio 2',
-    difficulty: 'Médio',
-    statement: 'Crie uma função que verifique se um número é primo.',
-    solution: 'function ehPrimo(n) { if (n < 2) return false; for (let i = 2; i <= Math.sqrt(n); i++) { if (n % i === 0) return false; } return true; }',
-    comments: [],
-  },
-  '6': {
-    title: 'Exercício Difícil 1',
-    difficulty: 'Difícil',
-    statement: 'Implemente o algoritmo de busca binária.',
-    solution: 'function buscaBinaria(arr, alvo) { let esq = 0, dir = arr.length - 1; while (esq <= dir) { const meio = Math.floor((esq + dir) / 2); if (arr[meio] === alvo) return meio; if (arr[meio] < alvo) esq = meio + 1; else dir = meio - 1; } return -1; }',
-    comments: [{ id: '1', user: 'Carlos Mendes', text: 'Algoritmo clássico!' }],
-  },
+// Mapeamento de dificuldade do banco (enum) para português
+const DIFFICULTY_MAP = {
+  easy: 'Fácil',
+  medium: 'Médio',
+  hard: 'Difícil',
 };
 
 const TAB_OPTIONS = ['Enunciado', 'Solução', 'Comentários'];
@@ -67,62 +29,119 @@ const ProblemDetailScreen = () => {
   const router = useRouter();
   const { id } = useLocalSearchParams();
   const { theme, fontSize } = useThemeStore();
+  const { setProblem, clearProblem } = useProblemStore();
   const styles = getStyles(theme, fontSize);
 
   const [activeTab, setActiveTab] = useState('Enunciado');
 
-  // Busca o problema pelo ID
-  const problem = MOCK_PROBLEMS[id] || {
-    title: 'Problema não encontrado',
-    difficulty: '',
-    statement: 'Este problema não existe.',
-    solution: '',
-    comments: [],
-  };
+  // Busca o problema do banco de dados
+  const { data: problem, isLoading, error } = useProblemById(id);
+
+  // Armazena o problema na store quando carregado
+  useEffect(() => {
+    if (problem) {
+      setProblem(problem);
+    }
+
+    // Cleanup: limpa a store quando o componente desmonta ou o ID muda
+    return () => {
+      clearProblem();
+    };
+  }, [problem, id, setProblem, clearProblem]);
 
   // Renderiza o conteúdo baseado na aba ativa
   const renderContent = () => {
+    if (!problem) return null;
+
     switch (activeTab) {
       case 'Enunciado':
         return (
           <View style={styles.contentSection}>
-            <Text style={styles.sectionTitle}>Enunciado</Text>
-            <Text style={styles.contentText}>{problem.statement}</Text>
+            <Text style={styles.sectionTitle}>{problem.title}</Text>
+            {problem.description_md ? (
+              <Markdown style={getMarkdownStyles(theme, fontSize)}>
+                {problem.description_md}
+              </Markdown>
+            ) : (
+              <Text style={styles.emptyText}>Enunciado não disponível</Text>
+            )}
           </View>
         );
       case 'Solução':
         return (
           <View style={styles.contentSection}>
             <Text style={styles.sectionTitle}>Solução</Text>
-            <View style={styles.codeBlock}>
-              <Text style={styles.codeText}>{problem.solution}</Text>
-            </View>
+            <Text style={styles.emptyText}>
+              Solução em desenvolvimento
+            </Text>
           </View>
         );
       case 'Comentários':
         return (
           <View style={styles.contentSection}>
-            <Text style={styles.sectionTitle}>
-              Comentários ({problem.comments.length})
+            <Text style={styles.sectionTitle}>Comentários</Text>
+            <Text style={styles.emptyText}>
+              Comentários em desenvolvimento
             </Text>
-            {problem.comments.length === 0 ? (
-              <Text style={styles.emptyText}>
-                Nenhum comentário ainda. Seja o primeiro!
-              </Text>
-            ) : (
-              problem.comments.map((comment) => (
-                <View key={comment.id} style={styles.commentCard}>
-                  <Text style={styles.commentUser}>{comment.user}</Text>
-                  <Text style={styles.commentText}>{comment.text}</Text>
-                </View>
-              ))
-            )}
           </View>
         );
       default:
         return null;
     }
   };
+
+  // Estado de carregamento
+  if (isLoading) {
+    return (
+      <SafeAreaView style={styles.safeArea}>
+        <StatusBar barStyle={theme.statusBar} backgroundColor={theme.background} />
+        <View style={[styles.container, styles.centerContainer]}>
+          <ActivityIndicator size="large" color={theme.primary} />
+          <Text style={styles.loadingText}>Carregando problema...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  // Estado de erro
+  if (error) {
+    return (
+      <SafeAreaView style={styles.safeArea}>
+        <StatusBar barStyle={theme.statusBar} backgroundColor={theme.background} />
+        <View style={[styles.container, styles.centerContainer]}>
+          <Feather name="alert-circle" size={48} color="#ef4444" />
+          <Text style={styles.errorText}>
+            Erro ao carregar o problema
+          </Text>
+          <TouchableOpacity
+            style={styles.retryButton}
+            onPress={() => router.back()}
+          >
+            <Text style={styles.retryButtonText}>Voltar</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  // Problema não encontrado
+  if (!problem) {
+    return (
+      <SafeAreaView style={styles.safeArea}>
+        <StatusBar barStyle={theme.statusBar} backgroundColor={theme.background} />
+        <View style={[styles.container, styles.centerContainer]}>
+          <Feather name="search" size={48} color={theme.textSecondary} />
+          <Text style={styles.errorText}>Problema não encontrado</Text>
+          <TouchableOpacity
+            style={styles.retryButton}
+            onPress={() => router.back()}
+          >
+            <Text style={styles.retryButtonText}>Voltar</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -138,7 +157,9 @@ const ProblemDetailScreen = () => {
           </TouchableOpacity>
           <View style={styles.headerTextContainer}>
             <Text style={styles.headerTitle}>{problem.title}</Text>
-            <Text style={styles.headerSubtitle}>{problem.difficulty}</Text>
+            <Text style={styles.headerSubtitle}>
+              {DIFFICULTY_MAP[problem.difficulty] || problem.difficulty}
+            </Text>
           </View>
           <View style={styles.headerSpacer} />
         </View>
@@ -187,6 +208,65 @@ const ProblemDetailScreen = () => {
   );
 };
 
+// Estilos para o Markdown
+const getMarkdownStyles = (theme, fontSize) => ({
+  body: {
+    color: theme.textPrimary,
+    fontSize: fontSize,
+    lineHeight: fontSize * 1.5,
+  },
+  heading1: {
+    color: theme.textPrimary,
+    fontSize: fontSize * 1.5,
+    fontWeight: 'bold',
+    marginTop: 12,
+    marginBottom: 8,
+  },
+  heading2: {
+    color: theme.textPrimary,
+    fontSize: fontSize * 1.3,
+    fontWeight: 'bold',
+    marginTop: 10,
+    marginBottom: 6,
+  },
+  code_inline: {
+    backgroundColor: theme.cardBackground,
+    color: theme.textPrimary,
+    fontFamily: 'monospace',
+    paddingHorizontal: 4,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  code_block: {
+    backgroundColor: theme.cardBackground,
+    color: theme.textPrimary,
+    fontFamily: 'monospace',
+    padding: 12,
+    borderRadius: 8,
+    marginVertical: 8,
+  },
+  fence: {
+    backgroundColor: theme.cardBackground,
+    color: theme.textPrimary,
+    fontFamily: 'monospace',
+    padding: 12,
+    borderRadius: 8,
+    marginVertical: 8,
+  },
+  bullet_list: {
+    marginVertical: 8,
+  },
+  ordered_list: {
+    marginVertical: 8,
+  },
+  list_item: {
+    marginVertical: 4,
+  },
+  paragraph: {
+    marginVertical: 4,
+  },
+});
+
 const getStyles = (theme, fontSize) =>
   StyleSheet.create({
     safeArea: {
@@ -196,6 +276,35 @@ const getStyles = (theme, fontSize) =>
     container: {
       flex: 1,
       backgroundColor: theme.background,
+    },
+    centerContainer: {
+      justifyContent: 'center',
+      alignItems: 'center',
+      paddingHorizontal: 20,
+    },
+    loadingText: {
+      color: theme.textSecondary,
+      fontSize: fontSize,
+      marginTop: 12,
+    },
+    errorText: {
+      color: '#ef4444',
+      fontSize: fontSize * 1.1,
+      textAlign: 'center',
+      marginTop: 16,
+      marginBottom: 20,
+    },
+    retryButton: {
+      backgroundColor: theme.primary,
+      paddingHorizontal: 24,
+      paddingVertical: 12,
+      borderRadius: 8,
+      marginTop: 12,
+    },
+    retryButtonText: {
+      color: '#FFF',
+      fontSize: fontSize,
+      fontWeight: 'bold',
     },
     // Header
     header: {

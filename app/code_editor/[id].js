@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   StyleSheet,
@@ -23,27 +23,34 @@ const CodeEditorScreen = () => {
   const { id } = useLocalSearchParams();
   
   // Zustand stores
-  const { currentProblem } = useProblemStore();
+  const { currentProblem, getCode, setCode } = useProblemStore();
   const { languageId, languageCode } = useLanguageStore();
   
   // Busca o starter code do problema
   const { data: starterData, isLoading: starterLoading, error: starterError } = useProblemStarter(id, languageId);
   
   const [initialCode, setInitialCode] = useState('');
-  const codeRef = useRef('');
   
-  // Atualiza o código inicial quando o starter code é carregado (apenas uma vez)
+  // Atualiza o código inicial quando o starter code é carregado
+  // Prioridade: código salvo na store > starter code > código padrão
   useEffect(() => {
-    if (starterData?.starter_code) {
+    if (!languageId) return;
+    
+    // Tenta buscar código salvo na store
+    const savedCode = getCode(id, languageId);
+    
+    if (savedCode) {
+      // Usa código salvo se existir
+      setInitialCode(savedCode);
+    } else if (starterData?.starter_code) {
+      // Usa starter code do banco se não houver código salvo
       setInitialCode(starterData.starter_code);
-      codeRef.current = starterData.starter_code;
     } else if (starterData && !starterData.starter_code) {
       // Fallback para código padrão quando não há starter code
       const defaultCode = '// Escreva seu código aqui\nfunction solucao() {\n  \n}\n';
       setInitialCode(defaultCode);
-      codeRef.current = defaultCode;
     }
-  }, [starterData]);
+  }, [starterData, id, languageId, getCode]);
   
   // Configura orientação e oculta navigation bar quando o componente montar
   useEffect(() => {
@@ -71,8 +78,9 @@ const CodeEditorScreen = () => {
   }, []);
 
   const handleRunCode = () => {
+    const currentCode = getCode(id, languageId);
     console.log('Executando código do problema ID:', id);
-    console.log('Código:', codeRef.current);
+    console.log('Código:', currentCode);
     
     Alert.alert(
       'Código Executado',
@@ -85,8 +93,8 @@ const CodeEditorScreen = () => {
     try {
       const data = JSON.parse(event.nativeEvent.data);
       if (data.type === 'codeChange') {
-        codeRef.current = data.code;
-        // Não chama setCode para não causar re-render
+        // Salva código na store para persistência
+        setCode(id, languageId, data.code);
       }
     } catch (error) {
       console.error('Erro ao processar mensagem:', error);

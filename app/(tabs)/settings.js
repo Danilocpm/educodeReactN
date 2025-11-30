@@ -6,9 +6,12 @@ import {
   StyleSheet,
   ScrollView,
   Alert,
+  ActivityIndicator,
 } from "react-native";
 import { useThemeStore } from "../../src/store/useThemeStore";
 import { useAuthStore } from "../../src/store/useAuthStore";
+import { useLanguageStore } from "../../src/store/useLanguageStore";
+import { useLanguages } from "../../src/services/useLanguages";
 
 // Componente auxiliar para os botões de opção
 const OptionButton = ({ label, onPress, isActive, styles }) => (
@@ -35,6 +38,9 @@ export default function SettingsScreen() {
   } = useThemeStore();
 
   const { signOut } = useAuthStore();
+  
+  const { languageId, languageCode, setLanguage } = useLanguageStore();
+  const { data: languages, isLoading: languagesLoading } = useLanguages();
 
   const handleLogout = async () => {
     Alert.alert(
@@ -113,6 +119,29 @@ export default function SettingsScreen() {
             styles={styles}
           />
         </View>
+
+        <Text style={[styles.label, { marginTop: 24 }]}>Linguagem de Programação</Text>
+        {languagesLoading ? (
+          <ActivityIndicator size="small" color={theme.textPrimary} style={{ marginVertical: 12 }} />
+        ) : (
+          <ScrollView 
+            horizontal 
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.languageScrollContent}
+          >
+            <View style={styles.optionRow}>
+              {languages?.map((language) => (
+                <OptionButton
+                  key={language.id}
+                  label={language.code}
+                  onPress={() => setLanguage(language.id, language.code)}
+                  isActive={languageId === language.id}
+                  styles={styles}
+                />
+              ))}
+            </View>
+          </ScrollView>
+        )}
       </View>
 
       {/* --- Seção da Conta --- */}
@@ -164,6 +193,9 @@ const getStyles = (theme) =>
       flexDirection: "row",
       justifyContent: "flex-start",
       gap: 12,
+    },
+    languageScrollContent: {
+      paddingRight: 20,
     },
     optionButton: {
       paddingVertical: 10,

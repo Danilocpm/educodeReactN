@@ -1,4 +1,4 @@
-import React, { useState, useRef, useMemo } from 'react';
+import React, { useState, useRef, useMemo, useEffect } from 'react';
 import {
   View,
   Text,
@@ -7,17 +7,69 @@ import {
   StatusBar,
   TouchableOpacity,
   Alert,
+  ActivityIndicator,
+  Platform,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
 import { WebView } from 'react-native-webview';
+import * as ScreenOrientation from 'expo-screen-orientation';
+import * as NavigationBar from 'expo-navigation-bar';
+import { useProblemStore } from '../../src/store/useProblemStore';
+import { useLanguageStore } from '../../src/store/useLanguageStore';
+import { useProblemStarter } from '../../src/services/useProblemStarters';
 
 const CodeEditorScreen = () => {
   const router = useRouter();
   const { id } = useLocalSearchParams();
-
-  const [code, setCode] = useState('// Escreva seu código aqui\nfunction solucao() {\n  \n}\n');
-  const codeRef = useRef(code);
+  
+  // Zustand stores
+  const { currentProblem } = useProblemStore();
+  const { languageId, languageCode } = useLanguageStore();
+  
+  // Busca o starter code do problema
+  const { data: starterData, isLoading: starterLoading, error: starterError } = useProblemStarter(id, languageId);
+  
+  const [initialCode, setInitialCode] = useState('');
+  const codeRef = useRef('');
+  
+  // Atualiza o código inicial quando o starter code é carregado (apenas uma vez)
+  useEffect(() => {
+    if (starterData?.starter_code) {
+      setInitialCode(starterData.starter_code);
+      codeRef.current = starterData.starter_code;
+    } else if (starterData && !starterData.starter_code) {
+      // Fallback para código padrão quando não há starter code
+      const defaultCode = '// Escreva seu código aqui\nfunction solucao() {\n  \n}\n';
+      setInitialCode(defaultCode);
+      codeRef.current = defaultCode;
+    }
+  }, [starterData]);
+  
+  // Configura orientação e oculta navigation bar quando o componente montar
+  useEffect(() => {
+    const setupScreen = async () => {
+      // Permite todas as orientações
+      await ScreenOrientation.unlockAsync();
+      
+      // Oculta a navigation bar no Android
+      if (Platform.OS === 'android') {
+        await NavigationBar.setVisibilityAsync('hidden');
+        await NavigationBar.setBehaviorAsync('overlay-swipe');
+      }
+    };
+    
+    setupScreen();
+    
+    // Quando o componente desmontar, restaura configurações
+    return () => {
+      ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP);
+      
+      if (Platform.OS === 'android') {
+        NavigationBar.setVisibilityAsync('visible');
+      }
+    };
+  }, []);
 
   const handleRunCode = () => {
     console.log('Executando código do problema ID:', id);
@@ -30,8 +82,12 @@ const CodeEditorScreen = () => {
     );
   };
 
-  // HTML com Monaco Editor embutido - useMemo para evitar recriar o HTML
-  const monacoHTML = useMemo(() => `
+  // HTML com Monaco Editor embutido - useMemo recria APENAS quando languageCode muda
+  const monacoHTML = useMemo(() => {
+    // Define a linguagem do Monaco (fallback para javascript se não definido)
+    const editorLanguage = languageCode || 'javascript';
+    
+    return `
     <!DOCTYPE html>
     <html>
     <head>
@@ -58,8 +114,8 @@ const CodeEditorScreen = () => {
         
         require(['vs/editor/editor.main'], function() {
           const editor = monaco.editor.create(document.getElementById('container'), {
-            value: ${JSON.stringify(code)},
-            language: 'javascript',
+            value: ${JSON.stringify(initialCode)},
+            language: '${editorLanguage}',
             theme: 'vs-dark',
             automaticLayout: true,
             fontSize: 14,
@@ -103,19 +159,52 @@ const CodeEditorScreen = () => {
       </script>
     </body>
     </html>
-  `, []); // Array vazio para criar apenas uma vez
+  `;
+  }, [initialCode, languageCode]); // Recria apenas quando initialCode (carregamento inicial) ou languageCode mudam
 
   const handleMessage = (event) => {
     try {
       const data = JSON.parse(event.nativeEvent.data);
       if (data.type === 'codeChange') {
         codeRef.current = data.code;
-        setCode(data.code);
+        // Não chama setCode para não causar re-render
       }
     } catch (error) {
       console.error('Erro ao processar mensagem:', error);
     }
   };
+  
+  // Estado de carregamento
+  if (starterLoading) {
+    return (
+      <SafeAreaView style={styles.safeArea}>
+        <StatusBar barStyle="light-content" backgroundColor="#0A0F21" />
+        <View style={[styles.container, styles.centerContainer]}>
+          <ActivityIndicator size="large" color="#007aff" />
+          <Text style={styles.loadingText}>Carregando código inicial...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+  
+  // Verifica se a linguagem foi selecionada
+  if (!languageId || !languageCode) {
+    return (
+      <SafeAreaView style={styles.safeArea}>
+        <StatusBar barStyle="light-content" backgroundColor="#0A0F21" />
+        <View style={[styles.container, styles.centerContainer]}>
+          <Feather name="alert-circle" size={48} color="#FFA500" style={{ marginBottom: 16 }} />
+          <Text style={styles.warningText}>Nenhuma linguagem selecionada</Text>
+          <Text style={styles.warningSubtext}>
+            Por favor, selecione uma linguagem de programação nas configurações.
+          </Text>
+          <TouchableOpacity style={styles.backButtonStyled} onPress={() => router.back()}>
+            <Text style={styles.backButtonText}>Voltar</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -210,6 +299,40 @@ const styles = StyleSheet.create({
   webview: {
     flex: 1,
     backgroundColor: '#1e1e1e',
+  },
+  centerContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+  },
+  loadingText: {
+    color: '#FFF',
+    fontSize: 16,
+    marginTop: 12,
+  },
+  warningText: {
+    color: '#FFA500',
+    fontSize: 20,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginBottom: 8,
+  },
+  warningSubtext: {
+    color: '#CCC',
+    fontSize: 14,
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  backButtonStyled: {
+    backgroundColor: '#007aff',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 8,
+  },
+  backButtonText: {
+    color: '#FFF',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
 });
 

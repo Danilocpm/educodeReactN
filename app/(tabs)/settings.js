@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   Text,
   View,
@@ -7,7 +7,10 @@ import {
   ScrollView,
   Alert,
   ActivityIndicator,
+  Modal,
+  FlatList,
 } from "react-native";
+import { Feather } from "@expo/vector-icons";
 import { useThemeStore } from "../../src/store/useThemeStore";
 import { useAuthStore } from "../../src/store/useAuthStore";
 import { useLanguageStore } from "../../src/store/useLanguageStore";
@@ -41,6 +44,8 @@ export default function SettingsScreen() {
   
   const { languageId, languageCode, setLanguage } = useLanguageStore();
   const { data: languages, isLoading: languagesLoading } = useLanguages();
+  
+  const [languageDropdownVisible, setLanguageDropdownVisible] = useState(false);
 
   const handleLogout = async () => {
     Alert.alert(
@@ -124,24 +129,65 @@ export default function SettingsScreen() {
         {languagesLoading ? (
           <ActivityIndicator size="small" color={theme.textPrimary} style={{ marginVertical: 12 }} />
         ) : (
-          <ScrollView 
-            horizontal 
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.languageScrollContent}
+          <TouchableOpacity
+            style={styles.dropdown}
+            onPress={() => setLanguageDropdownVisible(true)}
           >
-            <View style={styles.optionRow}>
-              {languages?.map((language) => (
-                <OptionButton
-                  key={language.id}
-                  label={language.code}
-                  onPress={() => setLanguage(language.id, language.code)}
-                  isActive={languageId === language.id}
-                  styles={styles}
-                />
-              ))}
-            </View>
-          </ScrollView>
+            <Text style={styles.dropdownText}>
+              {languageCode || "Selecione uma linguagem"}
+            </Text>
+            <Feather name="chevron-down" size={20} color={theme.textSecondary} />
+          </TouchableOpacity>
         )}
+        
+        {/* Modal do Dropdown */}
+        <Modal
+          visible={languageDropdownVisible}
+          transparent={true}
+          animationType="fade"
+          onRequestClose={() => setLanguageDropdownVisible(false)}
+        >
+          <TouchableOpacity
+            style={styles.modalOverlay}
+            activeOpacity={1}
+            onPress={() => setLanguageDropdownVisible(false)}
+          >
+            <View style={styles.modalContent}>
+              <View style={styles.modalHeader}>
+                <Text style={styles.modalTitle}>Selecione a Linguagem</Text>
+                <TouchableOpacity onPress={() => setLanguageDropdownVisible(false)}>
+                  <Feather name="x" size={24} color={theme.textPrimary} />
+                </TouchableOpacity>
+              </View>
+              <FlatList
+                data={languages}
+                keyExtractor={(item) => item.id.toString()}
+                renderItem={({ item }) => (
+                  <TouchableOpacity
+                    style={[
+                      styles.languageItem,
+                      languageId === item.id && styles.languageItemActive
+                    ]}
+                    onPress={() => {
+                      setLanguage(item.id, item.code);
+                      setLanguageDropdownVisible(false);
+                    }}
+                  >
+                    <Text style={[
+                      styles.languageItemText,
+                      languageId === item.id && styles.languageItemTextActive
+                    ]}>
+                      {item.code}
+                    </Text>
+                    {languageId === item.id && (
+                      <Feather name="check" size={20} color={theme.primary} />
+                    )}
+                  </TouchableOpacity>
+                )}
+              />
+            </View>
+          </TouchableOpacity>
+        </Modal>
       </View>
 
       {/* --- Seção da Conta --- */}
@@ -194,9 +240,6 @@ const getStyles = (theme) =>
       justifyContent: "flex-start",
       gap: 12,
     },
-    languageScrollContent: {
-      paddingRight: 20,
-    },
     optionButton: {
       paddingVertical: 10,
       paddingHorizontal: 16,
@@ -231,6 +274,69 @@ const getStyles = (theme) =>
     logoutButtonText: {
       color: "#FFFFFF",
       fontSize: 16,
+      fontWeight: "bold",
+    },
+    // Dropdown styles
+    dropdown: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      backgroundColor: theme.cardBackground,
+      borderWidth: 1.5,
+      borderColor: theme.borderColor,
+      borderRadius: 8,
+      paddingVertical: 12,
+      paddingHorizontal: 16,
+    },
+    dropdownText: {
+      color: theme.textPrimary,
+      fontSize: 16,
+      fontWeight: "500",
+    },
+    // Modal styles
+    modalOverlay: {
+      flex: 1,
+      backgroundColor: "rgba(0, 0, 0, 0.5)",
+      justifyContent: "center",
+      alignItems: "center",
+    },
+    modalContent: {
+      backgroundColor: theme.cardBackground,
+      borderRadius: 12,
+      width: "80%",
+      maxHeight: "60%",
+      overflow: "hidden",
+    },
+    modalHeader: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      padding: 16,
+      borderBottomWidth: 1,
+      borderBottomColor: theme.borderColor,
+    },
+    modalTitle: {
+      color: theme.textPrimary,
+      fontSize: 18,
+      fontWeight: "bold",
+    },
+    languageItem: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      padding: 16,
+      borderBottomWidth: 1,
+      borderBottomColor: theme.borderColor,
+    },
+    languageItemActive: {
+      backgroundColor: theme.background,
+    },
+    languageItemText: {
+      color: theme.textPrimary,
+      fontSize: 16,
+    },
+    languageItemTextActive: {
+      color: theme.primary,
       fontWeight: "bold",
     },
   });

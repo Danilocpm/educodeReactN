@@ -6,6 +6,8 @@ import {
   StatusBar,
   Alert,
   Platform,
+  ActivityIndicator,
+  Text,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import * as ScreenOrientation from 'expo-screen-orientation';
@@ -13,10 +15,14 @@ import * as NavigationBar from 'expo-navigation-bar';
 import { useProblemStore } from '../../src/store/useProblemStore';
 import { useLanguageStore } from '../../src/store/useLanguageStore';
 import { useProblemStarter } from '../../src/services/useProblemStarters';
+import { useProblemOutputs } from '../../src/services/useProblemOutputs';
+import { useSubmitCode } from '../../src/services/useJudge0';
+import { formatCodeForJudge0 } from '../../src/utils/codeFormatter';
 import CodeEditorHeader from '../../src/components/code_editor/CodeEditorHeader';
 import MonacoEditorWebView from '../../src/components/code_editor/MonacoEditorWebView';
 import EditorLoadingState from '../../src/components/code_editor/EditorLoadingState';
 import NoLanguageWarning from '../../src/components/code_editor/NoLanguageWarning';
+import TestResultsModal from '../../src/components/code_editor/TestResultsModal';
 
 const CodeEditorScreen = () => {
   const router = useRouter();
@@ -29,7 +35,15 @@ const CodeEditorScreen = () => {
   // Busca o starter code do problema
   const { data: starterData, isLoading: starterLoading, error: starterError } = useProblemStarter(id, languageId);
   
+  // Busca os test cases do problema
+  const { data: testCases, isLoading: testCasesLoading } = useProblemOutputs(id, languageId);
+  
+  // Judge0 submission mutation
+  const submitCode = useSubmitCode();
+  
   const [initialCode, setInitialCode] = useState('');
+  const [showResults, setShowResults] = useState(false);
+  const [testResults, setTestResults] = useState(null);
   
   // Atualiza o código inicial quando o starter code é carregado
   // Prioridade: código salvo na store > starter code > código padrão
@@ -77,16 +91,53 @@ const CodeEditorScreen = () => {
     };
   }, []);
 
-  const handleRunCode = () => {
+  const handleRunCode = async () => {
+    // 1. Validações
     const currentCode = getCode(id, languageId);
-    console.log('Executando código do problema ID:', id);
-    console.log('Código:', currentCode);
     
-    Alert.alert(
-      'Código Executado',
-      'A funcionalidade de execução será implementada em breve!',
-      [{ text: 'OK' }]
-    );
+    if (!currentCode || currentCode.trim() === '') {
+      Alert.alert('Erro', 'Nenhum código encontrado. Por favor, escreva seu código primeiro.');
+      return;
+    }
+    
+    if (!languageCode) {
+      Alert.alert('Erro', 'Nenhuma linguagem selecionada. Por favor, selecione uma linguagem nas configurações.');
+      return;
+    }
+    
+    if (!testCases || testCases.length === 0) {
+      Alert.alert('Erro', 'Nenhum teste disponível para este problema.');
+      return;
+    }
+    
+    try {
+      // 2. Formatar código para Judge0
+      const formattedData = formatCodeForJudge0({
+        languageCode,
+        userCode: currentCode,
+        testCases,
+      });
+      
+      console.log(`Executando ${formattedData.totalTests} testes...`);
+      
+      // 3. Submeter para Judge0 e aguardar resultados
+      const results = await submitCode.mutateAsync({
+        submissions: formattedData.submissions,
+        testCases,
+      });
+      
+      // 4. Mostrar resultados
+      setTestResults(results);
+      setShowResults(true);
+      
+    } catch (error) {
+      console.error('Erro ao executar código:', error);
+      Alert.alert(
+        'Erro na Execução',
+        error.message || 'Ocorreu um erro ao executar o código. Tente novamente.',
+        [{ text: 'OK' }]
+      );
+    }
   };
 
   const handleMessage = (event) => {
@@ -135,6 +186,23 @@ const CodeEditorScreen = () => {
           languageCode={languageCode}
           onMessage={handleMessage}
         />
+        
+        {/* Loading Overlay */}
+        {submitCode.isPending && (
+          <View style={styles.loadingOverlay}>
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="large" color="#007aff" />
+              <Text style={styles.loadingText}>Executando código...</Text>
+            </View>
+          </View>
+        )}
+        
+        {/* Test Results Modal */}
+        <TestResultsModal
+          visible={showResults}
+          onClose={() => setShowResults(false)}
+          results={testResults}
+        />
       </View>
     </SafeAreaView>
   );
@@ -148,6 +216,30 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#0A0F21',
+  },
+  loadingOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 999,
+  },
+  loadingContainer: {
+    backgroundColor: '#1a1d2e',
+    borderRadius: 16,
+    padding: 32,
+    alignItems: 'center',
+    minWidth: 200,
+  },
+  loadingText: {
+    color: '#FFF',
+    fontSize: 16,
+    marginTop: 16,
+    fontWeight: '600',
   },
 });
 

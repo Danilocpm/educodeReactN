@@ -4,6 +4,10 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { supabase } from "../lib/supabase";
 import { useAuthStore } from "../src/store/useAuthStore";
 import LoadingScreen from "../src/components/LoadingScreen";
+import { Buffer } from 'buffer';
+
+// Polyfill Buffer for React Native (required for base64 encoding)
+global.Buffer = Buffer;
 
 // Criar uma instância do QueryClient com configurações otimizadas para React Native
 const queryClient = new QueryClient({

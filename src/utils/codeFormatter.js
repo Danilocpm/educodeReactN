@@ -261,7 +261,22 @@ export const getJudge0LanguageId = (languageCode) => {
 export const createSubmissionPayload = (languageCode, userCode, testCode, expectedOutput) => {
   const formattedCode = formatCodeForLanguage(languageCode, userCode, testCode);
   const base64Code = Buffer.from(formattedCode).toString('base64');
-  const base64ExpectedOutput = expectedOutput ? Buffer.from(expectedOutput).toString('base64') : null;
+  
+  // Extract output value from JSON if expectedOutput is an object
+  let expectedOutputValue = expectedOutput;
+  if (expectedOutput && typeof expectedOutput === 'object') {
+    expectedOutputValue = expectedOutput.output || JSON.stringify(expectedOutput);
+  } else if (expectedOutput && typeof expectedOutput === 'string') {
+    try {
+      const parsed = JSON.parse(expectedOutput);
+      expectedOutputValue = parsed.output || expectedOutput;
+    } catch (e) {
+      // If not JSON, use as is
+      expectedOutputValue = expectedOutput;
+    }
+  }
+  
+  const base64ExpectedOutput = expectedOutputValue ? Buffer.from(String(expectedOutputValue)).toString('base64') : null;
   
   return {
     source_code: base64Code,

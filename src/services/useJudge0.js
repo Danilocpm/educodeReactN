@@ -134,6 +134,13 @@ const compareOutputs = (stdout, expectedOutput) => {
     // Decode Judge0 stdout
     const actualOutput = decodeBase64(stdout).trim();
     
+    console.log('=== DEBUG COMPARE OUTPUTS ===');
+    console.log('Raw stdout (base64):', stdout);
+    console.log('Decoded actualOutput:', JSON.stringify(actualOutput));
+    console.log('actualOutput length:', actualOutput.length);
+    console.log('expectedOutput raw:', expectedOutput);
+    console.log('expectedOutput type:', typeof expectedOutput);
+    
     // Extract expected value
     let expectedValue;
     if (typeof expectedOutput === 'object' && expectedOutput.output) {
@@ -150,8 +157,17 @@ const compareOutputs = (stdout, expectedOutput) => {
       expectedValue = String(expectedOutput).trim();
     }
     
-    // Compare outputs
-    return actualOutput === expectedValue;
+    console.log('Final expectedValue:', JSON.stringify(expectedValue));
+    console.log('expectedValue length:', expectedValue.length);
+    console.log('actualOutput.toLowerCase():', JSON.stringify(actualOutput.toLowerCase()));
+    console.log('expectedValue.toLowerCase():', JSON.stringify(expectedValue.toLowerCase()));
+    
+    const match = actualOutput.toLowerCase() === expectedValue.toLowerCase();
+    console.log('Match result:', match);
+    console.log('=== END DEBUG ===');
+    
+    // Compare outputs (case-insensitive)
+    return match;
   } catch (error) {
     console.error('Error comparing outputs:', error);
     return false;

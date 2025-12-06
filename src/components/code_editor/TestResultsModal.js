@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Modal,
   View,
@@ -10,13 +10,31 @@ import {
 } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 
-const { height: SCREEN_HEIGHT } = Dimensions.get('window');
+const getScreenDimensions = () => {
+  const { width, height } = Dimensions.get('window');
+  const isLandscape = width > height;
+  return { width, height, isLandscape };
+};
 
 const TestResultsModal = ({ visible, onClose, results }) => {
+  const [dimensions, setDimensions] = useState(getScreenDimensions());
+
+  useEffect(() => {
+    const subscription = Dimensions.addEventListener('change', () => {
+      setDimensions(getScreenDimensions());
+    });
+    return () => subscription?.remove();
+  }, []);
+
   if (!results) return null;
 
   const { results: testResults, totalTests, passedTests, failedTests } = results;
   const allPassed = failedTests === 0;
+  
+  // Ajustar altura do modal baseado na orientação
+  const modalMaxHeight = dimensions.isLandscape 
+    ? dimensions.height * 0.95  // 95% em landscape para aproveitar melhor o espaço
+    : dimensions.height * 0.85; // 85% em portrait
 
   return (
     <Modal
@@ -26,7 +44,7 @@ const TestResultsModal = ({ visible, onClose, results }) => {
       onRequestClose={onClose}
     >
       <View style={styles.modalOverlay}>
-        <View style={styles.modalContent}>
+        <View style={[styles.modalContent, { maxHeight: modalMaxHeight }]}>
           {/* Header */}
           <View style={styles.header}>
             <View style={styles.headerLeft}>
@@ -179,7 +197,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#1a1d2e',
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
-    maxHeight: SCREEN_HEIGHT * 0.85,
     paddingBottom: 20,
   },
   header: {

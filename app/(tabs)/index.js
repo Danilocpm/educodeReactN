@@ -7,7 +7,8 @@ import {
   FlatList,
   Text,
   View, 
-  TouchableOpacity, 
+  TouchableOpacity,
+  Image,
 } from 'react-native';
 
 import { Feather } from '@expo/vector-icons'
@@ -15,6 +16,7 @@ import { useRouter } from 'expo-router';
 import { useThemeStore } from '../../src/store/useThemeStore';
 import { useProblemStore } from '../../src/store/useProblemStore';
 import { useEasyProblems } from '../../src/services/useProblems';
+import { useUserProfile } from '../../src/hooks/useUserProfile';
 
 import ChallengeCard from '../../src/components/cards/ChallengeCard';
 import PracticeCard from '../../src/components/cards/PractiseCard';
@@ -48,6 +50,7 @@ const App = () => {
   const { theme, fontSize, isDark } = useThemeStore();
   const { lastProblemCode } = useProblemStore();
   const { data: problems = [], isLoading } = useEasyProblems();
+  const { profile, loading: profileLoading } = useUserProfile();
   const router = useRouter();
   
   const styles = React.useMemo(() => getStyles(theme, fontSize), [theme, fontSize]);
@@ -70,10 +73,20 @@ const App = () => {
         <View style={styles.headerContainer}>
           <View>
             <Text style={styles.welcomeText}>Bem Vindo</Text>
-            <Text style={styles.userNameText}>Seu Nome Aqui</Text>
+            <Text style={styles.userNameText}>{profile.name}</Text>
           </View>
-          <TouchableOpacity style={styles.profileIcon}>
-            <Feather name="user" size={24} color="#fff" />
+          <TouchableOpacity 
+            style={styles.profileIcon}
+            onPress={() => router.push('/(tabs)/profile')}
+          >
+            {profile.picture ? (
+              <Image 
+                source={{ uri: profile.picture }} 
+                style={styles.profileImage}
+              />
+            ) : (
+              <Feather name="user" size={24} color="#fff" />
+            )}
           </TouchableOpacity>
         </View>
         {/* --- Fim do Header --- */}
@@ -166,7 +179,13 @@ const getStyles = (theme, baseFontSize) => StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginTop: 10,
-    marginBottom: 10
+    marginBottom: 10,
+    overflow: 'hidden',
+  },
+  profileImage: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
   },
   // --- Fim dos Estilos do Header ---
 

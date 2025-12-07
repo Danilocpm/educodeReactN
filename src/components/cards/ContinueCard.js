@@ -1,22 +1,60 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { Feather, MaterialCommunityIcons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import { useThemeStore } from '../../store/useThemeStore';
+import { useProblemById } from '../../services/useProblems';
 
-const ContinueCard = ({ title }) => {
+const ContinueCard = ({ problemId, languageId }) => {
   const { theme, fontSize } = useThemeStore();
+  const router = useRouter();
   const styles = getStyles(theme, fontSize);
+  
+  // Busca os dados do problema se houver problemId
+  const { data: problem, isLoading } = useProblemById(problemId, {
+    enabled: !!problemId,
+  });
+
+  // Define se há um problema salvo ou usa o template padrão
+  const hasProblem = problemId && problem;
+  const displayTitle = hasProblem ? problem.title : 'Comece um Exercício';
+  const displaySubtitle = hasProblem 
+    ? 'Deseja continuar fazendo?' 
+    : 'Escolha um exercício para começar a praticar';
+
+  const handlePress = () => {
+    if (hasProblem) {
+      router.push(`/problems/${problemId}`);
+    } else {
+      // Navega para a aba de exercícios
+      router.push('/(tabs)/challenges');
+    }
+  };
+  
+  // Mostra loading apenas se está carregando E tem problemId
+  if (isLoading && problemId) {
+    return (
+      <View style={styles.continueCardContainer}>
+        <ActivityIndicator size="small" color={theme.primary} />
+        <Text style={styles.loadingText}>Carregando...</Text>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.continueCardContainer}>
       <View style={styles.continueLeft}>
-        <Feather name="cloud" size={40} color={theme.primary} />
+        <Feather 
+          name={hasProblem ? "cloud" : "book-open"} 
+          size={40} 
+          color={theme.primary} 
+        />
         <View style={styles.continueTextContainer}>
-          <Text style={styles.continueSubtitle}>{title}</Text>
-          <Text style={styles.continueTitle}>Deseja continuar fazendo?</Text>        
+          <Text style={styles.continueSubtitle}>{displayTitle}</Text>
+          <Text style={styles.continueTitle}>{displaySubtitle}</Text>        
         </View>
       </View>
-      <TouchableOpacity style={styles.blueCircleButton}>
+      <TouchableOpacity style={styles.blueCircleButton} onPress={handlePress}>
         <MaterialCommunityIcons name="chevron-double-right" size={28} color={theme.primaryText} />
       </TouchableOpacity>
     </View>
@@ -61,6 +99,11 @@ const getStyles = (theme, baseFontSize) => StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginLeft: 20,
+  },
+  loadingText: {
+    color: theme.textSecondary,
+    fontSize: baseFontSize,
+    marginLeft: 12,
   },
 });
 

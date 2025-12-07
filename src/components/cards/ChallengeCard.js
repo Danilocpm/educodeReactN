@@ -7,21 +7,27 @@ import {
   Dimensions,
 } from 'react-native';
 import { Feather, MaterialCommunityIcons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import { useThemeStore } from '../../store/useThemeStore';
 
 const { width } = Dimensions.get('window');
 
-const ChallengeCard = ({ item }) => {
+const ChallengeCard = ({ problem }) => {
   const { theme, fontSize } = useThemeStore();
+  const router = useRouter();
   const styles = getStyles(theme, fontSize);
+
+  const handlePress = () => {
+    router.push(`/problems/${problem.id}`);
+  };
 
   return (
     <View style={styles.challengeCardContainer}>
       <View style={styles.cardTextContainer}>
-        <Text style={styles.cardTitle}>{item.title}</Text>
-        <Text style={styles.cardSubtitle}>{item.subtitle}</Text>
+        <Text style={styles.cardTitle}>{problem.title}</Text>
+        <Text style={styles.cardSubtitle}>Problema #{problem.id}</Text>
       </View>
-      <TouchableOpacity style={styles.blueCircleButton}>
+      <TouchableOpacity style={styles.blueCircleButton} onPress={handlePress}>
         <MaterialCommunityIcons name="chevron-double-right" size={28} color={theme.primaryText} />
       </TouchableOpacity>
     </View>

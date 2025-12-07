@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, Button, StyleSheet, Alert } from 'react-native';
+import { View, StyleSheet, Alert, Text, TouchableOpacity, Image } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { supabase } from '../../lib/supabase';
 import { GoogleSignin, statusCodes } from '@react-native-google-signin/google-signin';
 import { useAuthStore } from '../../src/store/useAuthStore';
@@ -53,7 +54,25 @@ export default function Login() {
 
   return (
     <View style={styles.container}>
-      <Button title="Entrar com Google (Nativo)" onPress={handleLoginWithGoogle} />
+      <Image
+        source={require('../../images/AuthBackground.png')}
+        style={styles.backgroundImage}
+      />
+      <View style={styles.content}>
+        <Text style={styles.logo}>EDUCODE</Text>
+        
+        <TouchableOpacity 
+          style={styles.googleButton} 
+          onPress={handleLoginWithGoogle}
+          activeOpacity={0.8}
+        >
+          <Image
+            source={require('../../images/GoogleBtn.png')}
+            style={styles.googleBtnImage}
+            resizeMode="contain"
+          />
+        </TouchableOpacity>
+      </View>
     </View>
   );
 }
@@ -61,7 +80,37 @@ export default function Login() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#001F3F',
+  },
+  backgroundImage: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    width: '100%',
+    height: '100%',
+  },
+  content: {
+    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  logo: {
+    fontSize: 52,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+    letterSpacing: 10,
+    marginBottom: 20,
+    textShadowColor: 'rgba(0, 0, 0, 0.3)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 4,
+  },
+  googleButton: {
+    marginTop: 20,
+  },
+  googleBtnImage: {
+    width: 72,
+    height: 72,
   },
 });

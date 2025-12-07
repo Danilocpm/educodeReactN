@@ -36,8 +36,8 @@ export const useLanguageStore = create(
   persist(
     (set, get) => ({
       // Estado - linguagem de programação atual
-      languageId: null,
-      languageCode: null,
+      languageId: 2,
+      languageCode: 'python',
 
       // Ação para definir a linguagem atual
       setLanguage: (id, code) => set({ languageId: id, languageCode: code }),

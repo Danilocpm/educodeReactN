@@ -23,8 +23,8 @@ export const lightTheme = {
   
   // --- Bordas e Sombras ---
   // Borda para divisores e contêineres
-  border: 'rgba(0, 0, 0, 0.1)',
-  borderColor: 'rgba(0, 0, 0, 0.1)', 
+  border: 'rgba(0, 0, 0, 0.15)',
+  borderColor: 'rgba(0, 0, 0, 0.15)',
   // Cor da sombra (geralmente preto, a opacidade é controlada no estilo)
   shadowColor: '#000000',
   // Opacidade da sombra (0 = sem sombra)

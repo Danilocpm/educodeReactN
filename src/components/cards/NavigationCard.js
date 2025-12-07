@@ -31,6 +31,8 @@ const getStyles = (theme, baseFontSize) => StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 15,
+    borderWidth: 1,
+    borderColor: theme.borderColor,
   },
   navigationCardTitle: {
     color: theme.textPrimary,

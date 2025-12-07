@@ -71,6 +71,8 @@ const getStyles = (theme, baseFontSize) => StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    borderWidth: 1,
+    borderColor: theme.borderColor,
   },
   continueLeft: {
     flexDirection: 'row',

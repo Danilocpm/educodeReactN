@@ -8,9 +8,14 @@ const isProduction = process.env.NODE_ENV === 'production' || process.env.EAS_BU
 
 module.exports = isProduction
   ? withObfuscator(config, {
-      global: true,
-      // FILTRO AJUSTADO: Adicionei a verificação para 'lib/'
+      global: false,
+      // Only obfuscate your own source files, exclude node_modules
       filter: (filename) => {
+        // Skip node_modules entirely
+        if (filename.includes("node_modules")) {
+          return false;
+        }
+        // Only include your source directories
         return (
           filename.includes("src/") || 
           filename.includes("app/") || 

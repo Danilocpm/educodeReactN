@@ -3,14 +3,19 @@ const withObfuscator = require("obfuscator-io-metro-plugin");
 
 const config = getDefaultConfig(__dirname);
 
-// Aplica obfuscação APENAS em produção
-const isProduction = process.env.NODE_ENV === 'production';
+// Verifica se é produção OU build do EAS (para garantir que rode na nuvem)
+const isProduction = process.env.NODE_ENV === 'production' || process.env.EAS_BUILD === 'true';
 
 module.exports = isProduction
   ? withObfuscator(config, {
       global: true,
+      // FILTRO AJUSTADO: Adicionei a verificação para 'lib/'
       filter: (filename) => {
-        return filename.includes("src/") || filename.includes("app/");
+        return (
+          filename.includes("src/") || 
+          filename.includes("app/") || 
+          filename.includes("lib/")
+        );
       },
       obfuscatorOptions: {
         compact: true,

@@ -31,10 +31,13 @@ const TestResultsModal = ({ visible, onClose, results }) => {
   const { results: testResults, totalTests, passedTests, failedTests } = results;
   const allPassed = failedTests === 0;
   
+  // Check if there's a compilation error (will be the same for all tests)
+  const compilationError = testResults.find(r => r.compileOutput)?.compileOutput;
+  
   // Ajustar altura do modal baseado na orientação
   const modalMaxHeight = dimensions.isLandscape 
-    ? dimensions.height * 0.95  // 95% em landscape para aproveitar melhor o espaço
-    : dimensions.height * 0.85; // 85% em portrait
+    ? dimensions.height * 0.98  // 98% em landscape
+    : dimensions.height * 0.95; // 95% em portrait para mais espaço
 
   return (
     <Modal
@@ -76,11 +79,33 @@ const TestResultsModal = ({ visible, onClose, results }) => {
             </View>
           </View>
 
+          {/* Compilation Error (show once at top if exists) */}
+          {compilationError && (
+            <View style={styles.globalErrorContainer}>
+              <View style={styles.globalErrorHeader}>
+                <Feather name="alert-circle" size={18} color="#f44336" />
+                <Text style={styles.globalErrorTitle}>Erro de Compilação</Text>
+              </View>
+              <ScrollView 
+                style={styles.globalErrorBox}
+                nestedScrollEnabled={true}
+                showsVerticalScrollIndicator={true}
+              >
+                <Text style={styles.errorOutputText}>{compilationError}</Text>
+              </ScrollView>
+            </View>
+          )}
+
           {/* Test Results List */}
           <ScrollView style={styles.resultsContainer} showsVerticalScrollIndicator={true}>
-            {testResults.map((result, index) => (
-              <TestResultItem key={index} result={result} />
-            ))}
+            {testResults && testResults.length > 0 ? (
+              testResults.map((result, index) => {
+                console.log(`Rendering test item ${index + 1}`);
+                return <TestResultItem key={index} result={result} showCompileError={false} />;
+              })
+            ) : (
+              <Text style={styles.emptyText}>Nenhum resultado de teste disponível</Text>
+            )}
           </ScrollView>
 
           {/* Footer Button */}
@@ -93,7 +118,7 @@ const TestResultsModal = ({ visible, onClose, results }) => {
   );
 };
 
-const TestResultItem = ({ result }) => {
+const TestResultItem = ({ result, showCompileError = true }) => {
   const {
     testCaseIndex,
     passed,
@@ -103,9 +128,21 @@ const TestResultItem = ({ result }) => {
     compileOutput,
     time,
     memory,
+    expectedOutput,
   } = result;
 
   const [expanded, setExpanded] = React.useState(false);
+  
+  // Debug log when first test renders
+  React.useEffect(() => {
+    if (testCaseIndex === 1) {
+      console.log('=== MODAL TEST ITEM DATA ===');
+      console.log('Expected Output:', expectedOutput);
+      console.log('Stdout:', stdout);
+      console.log('Stderr:', stderr);
+      console.log('Compile Output:', compileOutput);
+    }
+  }, [testCaseIndex, expectedOutput, stdout, stderr, compileOutput]);
 
   return (
     <View style={[styles.testItem, passed ? styles.testPassed : styles.testFailed]}>
@@ -152,33 +189,65 @@ const TestResultItem = ({ result }) => {
             )}
           </View>
 
-          {/* Output */}
-          {stdout && (
+          {/* Test Code */}
+          {result.testCode && (
             <View style={styles.outputSection}>
-              <Text style={styles.outputLabel}>Saída:</Text>
-              <View style={styles.outputBox}>
-                <Text style={styles.outputText}>{stdout}</Text>
+              <Text style={styles.outputLabel}>Código do Teste:</Text>
+              <View style={styles.codeBox}>
+                <Text style={styles.codeText}>{result.testCode}</Text>
               </View>
             </View>
           )}
 
-          {/* Compilation Error */}
-          {compileOutput && (
+          {/* Expected Output */}
+          {expectedOutput && (
+            <View style={styles.outputSection}>
+              <Text style={styles.outputLabel}>✓ Saída Esperada:</Text>
+              <View style={styles.expectedBox}>
+                <Text style={styles.expectedText}>
+                  {typeof expectedOutput === 'object' ? JSON.stringify(expectedOutput, null, 2) : String(expectedOutput)}
+                </Text>
+              </View>
+            </View>
+          )}
+
+          {/* Actual Output */}
+          <View style={styles.outputSection}>
+            <Text style={[styles.outputLabel, !passed && styles.errorLabel]}>
+              {passed ? '✓ Saída Recebida:' : '✗ Saída Recebida:'}
+            </Text>
+            <View style={[styles.outputBox, !passed && styles.errorBox]}>
+              <Text style={[styles.outputText, !passed && styles.errorOutputText]}>
+                {stdout || '(sem saída)'}
+              </Text>
+            </View>
+          </View>
+
+          {/* Compilation Error (only if showCompileError is true) */}
+          {compileOutput && showCompileError && (
             <View style={styles.outputSection}>
               <Text style={[styles.outputLabel, styles.errorLabel]}>Erro de Compilação:</Text>
-              <View style={[styles.outputBox, styles.errorBox]}>
+              <ScrollView 
+                style={[styles.outputBox, styles.errorBox]}
+                nestedScrollEnabled={true}
+                showsVerticalScrollIndicator={true}
+              >
                 <Text style={styles.errorOutputText}>{compileOutput}</Text>
-              </View>
+              </ScrollView>
             </View>
           )}
 
-          {/* Runtime Error */}
+          {/* Runtime Error (stderr) */}
           {stderr && (
             <View style={styles.outputSection}>
-              <Text style={[styles.outputLabel, styles.errorLabel]}>Erro de Execução:</Text>
-              <View style={[styles.outputBox, styles.errorBox]}>
+              <Text style={[styles.outputLabel, styles.errorLabel]}>Erro de Execução (stderr):</Text>
+              <ScrollView 
+                style={[styles.outputBox, styles.errorBox]}
+                nestedScrollEnabled={true}
+                showsVerticalScrollIndicator={true}
+              >
                 <Text style={styles.errorOutputText}>{stderr}</Text>
-              </View>
+              </ScrollView>
             </View>
           )}
         </View>
@@ -198,6 +267,7 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     paddingBottom: 20,
+    height: '80%',
   },
   header: {
     flexDirection: 'row',
@@ -261,13 +331,16 @@ const styles = StyleSheet.create({
   resultsContainer: {
     flex: 1,
     paddingHorizontal: 16,
+    minHeight: 100,
+    paddingTop: 8,
   },
   testItem: {
     backgroundColor: 'rgba(255, 255, 255, 0.05)',
     borderRadius: 12,
     marginBottom: 12,
-    borderWidth: 1,
+    borderWidth: 2,
     overflow: 'hidden',
+    minHeight: 60,
   },
   testPassed: {
     borderColor: 'rgba(76, 175, 80, 0.3)',
@@ -338,10 +411,37 @@ const styles = StyleSheet.create({
     padding: 12,
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.1)',
+    maxHeight: 150,
   },
   errorBox: {
     backgroundColor: 'rgba(244, 67, 54, 0.1)',
     borderColor: 'rgba(244, 67, 54, 0.3)',
+  },
+  globalErrorContainer: {
+    marginHorizontal: 16,
+    marginBottom: 12,
+    backgroundColor: 'rgba(244, 67, 54, 0.1)',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(244, 67, 54, 0.3)',
+    padding: 16,
+  },
+  globalErrorHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 12,
+  },
+  globalErrorTitle: {
+    color: '#f44336',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  globalErrorBox: {
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+    borderRadius: 8,
+    padding: 12,
+    maxHeight: 200,
   },
   outputText: {
     color: '#FFF',
@@ -352,6 +452,32 @@ const styles = StyleSheet.create({
     color: '#f44336',
     fontSize: 12,
     fontFamily: 'monospace',
+  },
+  codeBox: {
+    backgroundColor: 'rgba(100, 100, 255, 0.1)',
+    borderRadius: 8,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(100, 100, 255, 0.3)',
+  },
+  codeText: {
+    color: '#9ca3af',
+    fontSize: 11,
+    fontFamily: 'monospace',
+    fontStyle: 'italic',
+  },
+  expectedBox: {
+    backgroundColor: 'rgba(76, 175, 80, 0.1)',
+    borderRadius: 8,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(76, 175, 80, 0.3)',
+  },
+  expectedText: {
+    color: '#4CAF50',
+    fontSize: 12,
+    fontFamily: 'monospace',
+    fontWeight: '600',
   },
   closeFooterButton: {
     backgroundColor: '#007aff',
@@ -365,6 +491,12 @@ const styles = StyleSheet.create({
     color: '#FFF',
     fontSize: 16,
     fontWeight: '600',
+  },
+  emptyText: {
+    color: '#999',
+    fontSize: 14,
+    textAlign: 'center',
+    marginTop: 20,
   },
 });
 

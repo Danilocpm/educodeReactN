@@ -159,6 +159,10 @@ const CodeEditorScreen = () => {
         testCases,
       });
       
+      console.log('=== RESULTS TO SHOW IN MODAL ===');
+      console.log('Results structure:', JSON.stringify(results, null, 2));
+      console.log('First test result:', JSON.stringify(results.results[0], null, 2));
+      
       // 4. Mostrar resultados
       setTestResults(results);
       setShowResults(true);

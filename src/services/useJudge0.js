@@ -190,6 +190,21 @@ const parseResults = (results, testCases) => {
     const stderr = decodeBase64(submission.stderr);
     const compileOutput = decodeBase64(submission.compile_output);
 
+    // Extract expected output value
+    let expectedOutputValue;
+    if (typeof testCase.expected_output === 'object' && testCase.expected_output.output) {
+      expectedOutputValue = String(testCase.expected_output.output);
+    } else if (typeof testCase.expected_output === 'string') {
+      try {
+        const expectedJson = JSON.parse(testCase.expected_output);
+        expectedOutputValue = String(expectedJson.output || testCase.expected_output);
+      } catch (e) {
+        expectedOutputValue = testCase.expected_output;
+      }
+    } else {
+      expectedOutputValue = String(testCase.expected_output);
+    }
+
     // Determine if test passed
     let passed = false;
     let message = submission.status.description;
@@ -218,7 +233,7 @@ const parseResults = (results, testCases) => {
       compileOutput,
       time: submission.time,
       memory: submission.memory,
-      expectedOutput: testCase.expected_output,
+      expectedOutput: expectedOutputValue, // Clean expected output value
       testCode: testCase.test_code,
     };
   });

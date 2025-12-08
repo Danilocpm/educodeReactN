@@ -42,7 +42,11 @@ const ProblemDetailScreen = () => {
   const { data: problem, isLoading, error } = useProblemById(id);
   
   // Busca as submissões do usuário para este problema
-  const { data: submissions, isLoading: submissionsLoading } = useSubmissionsByProblem(id, languageId);
+  // refetchOnMount: 'always' garante que sempre busca dados frescos ao abrir a aba
+  const { data: submissions, isLoading: submissionsLoading, refetch: refetchSubmissions } = useSubmissionsByProblem(id, languageId, {
+    refetchOnMount: 'always',
+    refetchOnWindowFocus: true,
+  });
 
   // Armazena o problema na store quando carregado
   useEffect(() => {
@@ -55,6 +59,13 @@ const ProblemDetailScreen = () => {
       clearProblem();
     };
   }, [problem, id, setProblem, clearProblem]);
+
+  // Recarrega submissões quando a aba de Submissões é aberta
+  useEffect(() => {
+    if (activeTab === 'Submissões') {
+      refetchSubmissions();
+    }
+  }, [activeTab, refetchSubmissions]);
 
   // Renderiza o conteúdo baseado na aba ativa
   const renderContent = () => {

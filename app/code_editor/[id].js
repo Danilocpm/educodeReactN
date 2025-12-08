@@ -17,6 +17,7 @@ import { useLanguageStore } from '../../src/store/useLanguageStore';
 import { useProblemStarter } from '../../src/services/useProblemStarters';
 import { useProblemOutputs } from '../../src/services/useProblemOutputs';
 import { useSubmitCode } from '../../src/services/useJudge0';
+import { useSaveSubmission } from '../../src/services/useSubmissions';
 import { formatCodeForJudge0 } from '../../src/utils/codeFormatter';
 import CodeEditorHeader from '../../src/components/code_editor/CodeEditorHeader';
 import MonacoEditorWebView from '../../src/components/code_editor/MonacoEditorWebView';
@@ -38,8 +39,40 @@ const CodeEditorScreen = () => {
   // Busca os test cases do problema
   const { data: testCases, isLoading: testCasesLoading } = useProblemOutputs(id, languageId);
   
+  // Save submission mutation
+  const saveSubmission = useSaveSubmission();
+  
   // Judge0 submission mutation
-  const submitCode = useSubmitCode();
+  const submitCode = useSubmitCode({
+    onSuccess: async (results, variables) => {
+      // Save submission to database after successful execution
+      try {
+        // Calculate average execution time and memory from test results
+        const avgTime = results.results.reduce((sum, r) => sum + (parseFloat(r.time) || 0), 0) / results.results.length;
+        const avgMemory = results.results.reduce((sum, r) => sum + (parseFloat(r.memory) || 0), 0) / results.results.length;
+        
+        // Get the original code (not base64 encoded)
+        const currentCode = getCode(id, languageId);
+        
+        await saveSubmission.mutateAsync({
+          problemId: parseInt(id),
+          languageId: languageId,
+          code: currentCode,
+          status: `${results.passedTests}/${results.totalTests} testes`,
+          passedTests: results.passedTests,
+          totalTests: results.totalTests,
+          executionTime: avgTime.toFixed(2),
+          memoryUsed: avgMemory.toFixed(2),
+          testResults: JSON.stringify(results.results),
+        });
+        
+        console.log('Submission saved successfully');
+      } catch (error) {
+        console.error('Error saving submission:', error);
+        // Don't throw - we still want to show results even if save fails
+      }
+    },
+  });
   
   const [initialCode, setInitialCode] = useState('');
   const [showResults, setShowResults] = useState(false);
@@ -120,7 +153,7 @@ const CodeEditorScreen = () => {
       
       console.log(`Executando ${formattedData.totalTests} testes...`);
       
-      // 3. Submeter para Judge0 e aguardar resultados
+      // 3. Submeter para Judge0 e aguardar resultados (onSuccess callback will save to DB)
       const results = await submitCode.mutateAsync({
         submissions: formattedData.submissions,
         testCases,

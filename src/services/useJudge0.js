@@ -226,9 +226,10 @@ const parseResults = (results, testCases) => {
 
 /**
  * Hook to submit code to Judge0 and get results
+ * @param {Object} options - Mutation options (onSuccess, onError, etc.)
  * @returns {Object} Mutation object with mutate function
  */
-export const useSubmitCode = () => {
+export const useSubmitCode = (options = {}) => {
   return useMutation({
     mutationFn: async ({ submissions, testCases }) => {
       // 1. Submit batch to Judge0
@@ -250,8 +251,12 @@ export const useSubmitCode = () => {
         failedTests: parsedResults.filter((r) => !r.passed).length,
       };
     },
+    onSuccess: options.onSuccess,
     onError: (error) => {
       console.error('Judge0 submission error:', error);
+      if (options.onError) {
+        options.onError(error);
+      }
     },
   });
 };

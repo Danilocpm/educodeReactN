@@ -14,7 +14,10 @@ import { Feather } from '@expo/vector-icons';
 import Markdown from 'react-native-markdown-display';
 import { useThemeStore } from '../../src/store/useThemeStore';
 import { useProblemStore } from '../../src/store/useProblemStore';
+import { useLanguageStore } from '../../src/store/useLanguageStore';
 import { useProblemById } from '../../src/services/useProblems';
+import { useSubmissionsByProblem } from '../../src/services/useSubmissions';
+import SubmissionCard from '../../src/components/profile/SubmissionCard';
 
 // Mapeamento de dificuldade do banco (enum) para português
 const DIFFICULTY_MAP = {
@@ -23,19 +26,23 @@ const DIFFICULTY_MAP = {
   hard: 'Difícil',
 };
 
-const TAB_OPTIONS = ['Enunciado', 'Solução', 'Comentários'];
+const TAB_OPTIONS = ['Enunciado', 'Solução', 'Submissões'];
 
 const ProblemDetailScreen = () => {
   const router = useRouter();
   const { id } = useLocalSearchParams();
   const { theme, fontSize } = useThemeStore();
   const { setProblem, clearProblem } = useProblemStore();
+  const { languageId } = useLanguageStore();
   const styles = getStyles(theme, fontSize);
 
   const [activeTab, setActiveTab] = useState('Enunciado');
 
   // Busca o problema do banco de dados
   const { data: problem, isLoading, error } = useProblemById(id);
+  
+  // Busca as submissões do usuário para este problema
+  const { data: submissions, isLoading: submissionsLoading } = useSubmissionsByProblem(id, languageId);
 
   // Armazena o problema na store quando carregado
   useEffect(() => {
@@ -76,13 +83,29 @@ const ProblemDetailScreen = () => {
             </Text>
           </View>
         );
-      case 'Comentários':
+      case 'Submissões':
         return (
           <View style={styles.contentSection}>
-            <Text style={styles.sectionTitle}>Comentários</Text>
-            <Text style={styles.emptyText}>
-              Comentários em desenvolvimento
-            </Text>
+            <Text style={styles.sectionTitle}>Minhas Submissões</Text>
+            {submissionsLoading ? (
+              <ActivityIndicator size="small" color={theme.primary} style={{ marginTop: 20 }} />
+            ) : submissions && submissions.length > 0 ? (
+              <View style={styles.submissionsContainer}>
+                {submissions.map((submission) => (
+                  <SubmissionCard key={submission.id} submission={submission} />
+                ))}
+              </View>
+            ) : (
+              <View style={styles.emptyStateContainer}>
+                <Feather name="file-text" size={48} color={theme.textSecondary} />
+                <Text style={styles.emptyText}>
+                  Nenhuma submissão encontrada
+                </Text>
+                <Text style={styles.emptySubtext}>
+                  Execute seu código no editor para criar sua primeira submissão
+                </Text>
+              </View>
+            )}
           </View>
         );
       default:
@@ -427,6 +450,23 @@ const getStyles = (theme, fontSize) =>
       fontSize: fontSize,
       textAlign: 'center',
       marginTop: 20,
+    },
+    // Submissions
+    submissionsContainer: {
+      marginTop: 8,
+    },
+    emptyStateContainer: {
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingVertical: 40,
+      gap: 12,
+    },
+    emptySubtext: {
+      color: theme.textSecondary,
+      fontSize: fontSize * 0.85,
+      textAlign: 'center',
+      marginTop: 4,
+      paddingHorizontal: 20,
     },
     // Floating Code Button
     codeButton: {

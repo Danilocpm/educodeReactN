@@ -89,9 +89,15 @@ const ProblemDetailScreen = () => {
         return (
           <View style={styles.contentSection}>
             <Text style={styles.sectionTitle}>Solução</Text>
-            <Text style={styles.emptyText}>
-              Solução em desenvolvimento
-            </Text>
+            {problem.solutions_md ? (
+              <Markdown style={getMarkdownStyles(theme, fontSize)}>
+                {problem.solutions_md}
+              </Markdown>
+            ) : (
+              <Text style={styles.emptyText}>
+                Solução não disponível
+              </Text>
+            )}
           </View>
         );
       case 'Submissões':

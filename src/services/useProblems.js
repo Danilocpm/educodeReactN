@@ -85,7 +85,7 @@ export const useProblemsByDifficulty = (difficulty, options = {}) => {
 const fetchProblemById = async (id) => {
   const { data, error } = await supabase
     .from('problems')
-    .select('id, title, slug, description_md, difficulty')
+    .select('id, title, slug, description_md, difficulty, solutions_md')
     .eq('id', id)
     .single();
 
